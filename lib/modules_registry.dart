@@ -1,7 +1,8 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mod_iot/mod_iot.dart';
 
-/// Registri seluruh modul yang tersedia dalam kompilasi ini.
+/// Registri terpusat untuk modul-modul fitur yang dikompilasi ke dalam aplikasi.
 class ModulesRegistry {
   ModulesRegistry._();
 
@@ -9,30 +10,26 @@ class ModulesRegistry {
     IotModule(),
   ];
 
-  /// Mengembalikan modul aktif berdasarkan:
-  /// 1. Flag compile-time --dart-define=MODULES=mod1,mod2 (default: semua)
-  /// 2. Daftar modul aktif yang diizinkan oleh server
+  /// Mengembalikan daftar modul aktif yang telah disaring berdasarkan:
+  /// 1. Konfigurasi `MODULES` pada berkas `.env` (jika didefinisikan).
+  /// 2. Daftar modul yang diizinkan untuk perangkat dari backend auth.
   static List<AppModule> getActiveModules({List<String>? serverEnabledModules}) {
-    // 1. Baca dart-define flag
-    const compileTimeModules = String.fromEnvironment('MODULES', defaultValue: '');
-    List<String>? allowedByBuild;
-    if (compileTimeModules.isNotEmpty) {
-      allowedByBuild = compileTimeModules
+    final envModules = dotenv.env['MODULES'] ?? '';
+    List<String>? allowedByEnv;
+    if (envModules.isNotEmpty) {
+      allowedByEnv = envModules
           .split(',')
           .map((s) => s.trim().toLowerCase())
           .where((s) => s.isNotEmpty)
           .toList();
     }
 
-    // Server list (sementara dummy ['iot'] jika tidak diprovide)
     final serverList = serverEnabledModules ?? ['iot'];
 
     return _allModules.where((module) {
-      // Saring berdasarkan build flag jika ada
-      if (allowedByBuild != null && !allowedByBuild.contains(module.id)) {
+      if (allowedByEnv != null && !allowedByEnv.contains(module.id)) {
         return false;
       }
-      // Saring berdasarkan hak akses server
       if (!serverList.contains(module.id)) {
         return false;
       }

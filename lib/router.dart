@@ -1,10 +1,16 @@
+import 'dart:async';
+
 import 'package:core_api/core_api.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'screens/auth_status_screen.dart';
+import 'screens/landing_screen.dart';
 import 'services/auth_service.dart';
 
+/// Membentuk instance [GoRouter] yang menggabungkan rute inti sistem autentikasi
+/// dengan rute dinamis dari modul-modul fitur yang aktif.
 GoRouter createRouter({
   required List<AppModule> activeModules,
   required AuthService authService,
@@ -14,248 +20,191 @@ GoRouter createRouter({
     routes: [
       GoRoute(
         path: '/',
-        name: 'home',
-        builder: (context, state) => HomeScreen(activeModules: activeModules),
+        name: 'landing',
+        builder: (context, state) => LandingScreen(authService: authService),
       ),
       GoRoute(
-        path: '/register',
-        name: 'register',
-        builder: (context, state) => RegisterScreen(authService: authService),
+        path: '/auth/status',
+        name: 'auth-status',
+        builder: (context, state) =>
+            AuthStatusScreen(authService: authService),
       ),
-      // Susun seluruh rute dari setiap modul aktif
+      GoRoute(
+        path: '/home',
+        name: 'home',
+        builder: (context, state) => HomeScreen(
+          activeModules: activeModules,
+          authService: authService,
+        ),
+      ),
       ...activeModules.expand((m) => m.routes),
     ],
   );
 }
 
-/// Layar beranda utama yang menyusun kartu navigasi setiap modul.
-class HomeScreen extends StatelessWidget {
+/// Layar beranda utama yang menampilkan antarmuka dari modul aktif.
+/// Mendukung peralihan modul dan memantau status validitas perangkat secara periodik.
+class HomeScreen extends StatefulWidget {
   final List<AppModule> activeModules;
-
-  const HomeScreen({super.key, required this.activeModules});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gumpalan'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.app_registration),
-            tooltip: 'Pendaftaran Perangkat',
-            onPressed: () => context.push('/register'),
-          ),
-        ],
-      ),
-      body: activeModules.isEmpty
-          ? const Center(child: Text('Tidak ada modul aktif.'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: activeModules.length,
-              itemBuilder: (context, index) {
-                final module = activeModules[index];
-                final card = module.homeCard;
-                if (card != null) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: card,
-                  );
-                }
-                return ListTile(
-                  leading: Icon(module.icon),
-                  title: Text(module.name),
-                  onTap: () => context.push('/${module.id}'),
-                );
-              },
-            ),
-    );
-  }
-}
-
-/// Layar pendaftaran perangkat dan cek status persetujuan terminal.
-class RegisterScreen extends StatefulWidget {
   final AuthService authService;
 
-  const RegisterScreen({super.key, required this.authService});
+  const HomeScreen({
+    super.key,
+    required this.activeModules,
+    required this.authService,
+  });
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
-  final _controller = TextEditingController();
-  bool _isLoading = false;
-  String? _deviceId;
-  DeviceStatus? _status;
-  String? _errorMessage;
+class _HomeScreenState extends State<HomeScreen> {
+  int _activeIndex = 0;
+  Timer? _authGuardTimer;
 
   @override
   void initState() {
     super.initState();
-    _deviceId = widget.authService.registeredDeviceId;
+    _checkDeviceStatus();
+    _authGuardTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => _checkDeviceStatus(),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _authGuardTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _handleRegister() async {
-    final name = _controller.text.trim();
-    if (name.isEmpty) {
-      setState(() => _errorMessage = 'Nama perangkat wajib diisi');
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final res = await widget.authService.register(name);
-      setState(() {
-        _deviceId = res.deviceId;
-        _status = res.status;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Gagal mendaftar: $e';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _handleCheckStatus() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
+  Future<void> _checkDeviceStatus() async {
+    final router = GoRouter.of(context);
     try {
       final res = await widget.authService.checkStatus();
-      setState(() {
-        _status = res.status;
-        _isLoading = false;
-      });
-
       if (!mounted) return;
-
-      if (res.status == DeviceStatus.approved) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Perangkat DISETUJUI! Token berhasil disimpan.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        context.go('/');
-      } else if (res.status == DeviceStatus.revoked) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Akses perangkat telah DICABUT (Revoked).'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Status masih menunggu persetujuan di terminal.'),
-          ),
-        );
+      if (res.status == DeviceStatus.revoked ||
+          res.status == DeviceStatus.pending) {
+        _authGuardTimer?.cancel();
+        router.go('/auth/status');
       }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Gagal memeriksa status: $e';
-        _isLoading = false;
-      });
-    }
+    } catch (_) {}
+  }
+
+  AppModule? get _currentModule {
+    if (widget.activeModules.isEmpty) return null;
+    return widget.activeModules[_activeIndex.clamp(
+      0,
+      widget.activeModules.length - 1,
+    )];
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final module = _currentModule;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pendaftaran Perangkat'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        title: Row(
           children: [
-            if (_deviceId == null) ...[
-              const Text(
-                'Daftarkan perangkat ini ke server Gumpalan.',
-                style: TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _controller,
-                decoration: InputDecoration(
-                  labelText: 'Nama Perangkat (contoh: HP Ruang Tamu)',
-                  border: const OutlineInputBorder(),
-                  errorText: _errorMessage,
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleRegister,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Kirim Permintaan Pendaftaran'),
-              ),
-            ] else ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Informasi Perangkat',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Device ID: $_deviceId'),
-                      const SizedBox(height: 4),
-                      Text('Status: ${_status?.name ?? "pending"}'),
-                      const Divider(height: 24),
-                      const Text(
-                        'Persetujuan Admin Diperlukan:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Jalankan perintah ini di terminal server:\nauth device approve $_deviceId',
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: _isLoading
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Cek Status Persetujuan'),
-                onPressed: _isLoading ? null : _handleCheckStatus,
-              ),
+            if (module != null) ...[
+              Icon(module.icon, size: 20),
+              const SizedBox(width: 8),
             ],
+            Text(module?.name ?? 'Gumpalan'),
           ],
         ),
+        actions: [
+          if (widget.activeModules.length > 1)
+            PopupMenuButton<int>(
+              icon: const Icon(Icons.apps_rounded),
+              tooltip: 'Ganti tampilan',
+              onSelected: (i) => setState(() => _activeIndex = i),
+              itemBuilder: (context) => widget.activeModules
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) => PopupMenuItem(
+                      value: e.key,
+                      child: Row(
+                        children: [
+                          Icon(
+                            e.value.icon,
+                            size: 18,
+                            color: e.key == _activeIndex
+                                ? colors.primary
+                                : null,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            e.value.name,
+                            style: TextStyle(
+                              fontWeight: e.key == _activeIndex
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: e.key == _activeIndex
+                                  ? colors.primary
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Keluar',
+            onPressed: () async {
+              final router = GoRouter.of(context);
+              await widget.authService.logout();
+              if (!context.mounted) return;
+              router.go('/');
+            },
+          ),
+        ],
+      ),
+      body: module != null
+          ? module.homeScreen
+          : _EmptyModuleView(colors: colors),
+    );
+  }
+}
+
+class _EmptyModuleView extends StatelessWidget {
+  final ColorScheme colors;
+
+  const _EmptyModuleView({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.extension_off_rounded,
+            size: 64,
+            color: colors.onSurface.withValues(alpha: 0.25),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Tidak ada modul aktif',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: colors.onSurface.withValues(alpha: 0.45),
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Konfigurasikan variabel MODULES pada file .env\nuntuk mengaktifkan fitur.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.onSurface.withValues(alpha: 0.35),
+                ),
+          ),
+        ],
       ),
     );
   }
