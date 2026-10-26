@@ -1,4 +1,5 @@
 import 'package:core_api/core_api.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gumpalan/app.dart';
@@ -86,9 +87,33 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Gumpalan'), findsWidgets);
-      expect(find.text('Daftarkan Perangkat Ini'), findsOneWidget);
+      expect(find.text('Login'), findsOneWidget);
 
-      await tester.tap(find.text('Daftarkan Perangkat Ini'));
+      // Beralih ke form registrasi akun baru
+      await tester.ensureVisible(find.text('Belum punya akun? Buat Akun'));
+      await tester.tap(find.text('Belum punya akun? Buat Akun'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Buat Akun Baru'), findsOneWidget);
+      expect(find.text('Daftar'), findsOneWidget);
+
+      // Mengisi form pendaftaran
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Username'),
+        'johndoe',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Password'),
+        'secret123',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Ulangi Password'),
+        'secret123',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Daftar'));
+      await tester.tap(find.text('Daftar'));
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
@@ -202,6 +227,8 @@ void main() {
       );
 
       await tester.pumpWidget(GumpalanApp(authService: authService));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 

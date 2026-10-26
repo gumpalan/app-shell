@@ -25,6 +25,7 @@ void main() {
 
     // Memverifikasi navigasi ke LandingScreen saat perangkat belum terdaftar
     expect(find.text('Gumpalan'), findsWidgets);
-    expect(find.text('Daftarkan Perangkat Ini'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Belum punya akun? Buat Akun'), findsOneWidget);
   });
 }

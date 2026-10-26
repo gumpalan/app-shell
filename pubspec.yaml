@@ -41,6 +41,7 @@ dependencies:
     path: ../app-core-ui
   mod_iot:
     path: ../app-mod-iot
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:

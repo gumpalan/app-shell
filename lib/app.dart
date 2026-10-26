@@ -4,36 +4,82 @@ import 'package:flutter/material.dart';
 
 import 'modules_registry.dart';
 import 'router.dart';
+import 'screens/pin_screens.dart';
+import 'services/app_lock_service.dart';
 import 'services/auth_service.dart';
 
 /// Root widget aplikasi Gumpalan.
 /// Bertanggung jawab atas inisialisasi tema, router komposit,
-/// dan penentuan rute awal berdasarkan status autentikasi perangkat.
+/// proteksi kunci aplikasi (App Lock / Biometrics), dan penentuan rute awal.
 class GumpalanApp extends StatefulWidget {
   final AuthService? authService;
+  final AppLockService? appLockService;
 
-  const GumpalanApp({super.key, this.authService});
+  const GumpalanApp({
+    super.key,
+    this.authService,
+    this.appLockService,
+  });
 
   @override
   State<GumpalanApp> createState() => _GumpalanAppState();
 }
 
-class _GumpalanAppState extends State<GumpalanApp> {
+class _GumpalanAppState extends State<GumpalanApp> with WidgetsBindingObserver {
   late final AuthService _authService;
+  late final AppLockService _appLockService;
   late final dynamic _router;
 
   _StartRoute? _startRoute;
+  bool _isAppLocked = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _authService = widget.authService ?? AuthService();
+    _appLockService = widget.appLockService ?? AppLockService();
     final activeModules = ModulesRegistry.getActiveModules();
     _router = createRouter(
       activeModules: activeModules,
       authService: _authService,
+      appLockService: _appLockService,
     );
     _resolveStartRoute();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _appLockService.isLockEnabled().then((enabled) {
+        if (enabled && mounted) {
+          _appLockService.lockSession();
+          setState(() => _isAppLocked = true);
+        }
+      });
+    } else if (state == AppLifecycleState.resumed) {
+      _checkLockStatusAndPrompt();
+    }
+  }
+
+  Future<void> _checkLockStatusAndPrompt() async {
+    final enabled = await _appLockService.isLockEnabled();
+    final isAuth = await _authService.isAuthenticated();
+    if (enabled && isAuth && !_appLockService.isUnlockedForSession) {
+      if (mounted) {
+        setState(() => _isAppLocked = true);
+      }
+    } else {
+      if (mounted && _isAppLocked) {
+        setState(() => _isAppLocked = false);
+      }
+    }
   }
 
   /// Menentukan halaman awal saat cold start dengan memverifikasi
@@ -74,6 +120,15 @@ class _GumpalanAppState extends State<GumpalanApp> {
     }
   }
 
+  Future<void> _checkInitialLock() async {
+    final lockEnabled = await _appLockService.isLockEnabled();
+    if (lockEnabled) {
+      if (mounted) {
+        setState(() => _isAppLocked = true);
+      }
+    }
+  }
+
   void _setStart(_StartRoute route) {
     if (mounted) setState(() => _startRoute = route);
   }
@@ -91,12 +146,34 @@ class _GumpalanAppState extends State<GumpalanApp> {
           return _SplashScreen();
         }
         if (_startRoute != _StartRoute.done) {
+          final target = _startRoute!;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _router.go(_startRoute!.path);
+            _router.go(target.path);
+            if (target == _StartRoute.home) {
+              _checkLockStatusAndPrompt();
+            }
             setState(() => _startRoute = _StartRoute.done);
           });
         }
-        return child ?? const SizedBox.shrink();
+
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            if (_isAppLocked)
+              Overlay(
+                initialEntries: [
+                  OverlayEntry(
+                    builder: (context) => PinLockScreen(
+                      appLockService: _appLockService,
+                      onUnlocked: () {
+                        setState(() => _isAppLocked = false);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        );
       },
     );
   }

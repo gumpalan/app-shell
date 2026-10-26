@@ -7,13 +7,16 @@ import 'package:go_router/go_router.dart';
 
 import 'screens/auth_status_screen.dart';
 import 'screens/landing_screen.dart';
+import 'screens/settings_screen.dart';
+import 'services/app_lock_service.dart';
 import 'services/auth_service.dart';
 
-/// Membentuk instance [GoRouter] yang menggabungkan rute inti sistem autentikasi
-/// dengan rute dinamis dari modul-modul fitur yang aktif.
+/// Membentuk instance [GoRouter] yang menggabungkan rute inti sistem autentikasi,
+/// pengaturan profil, dengan rute dinamis dari modul-modul fitur yang aktif.
 GoRouter createRouter({
   required List<AppModule> activeModules,
   required AuthService authService,
+  required AppLockService appLockService,
 }) {
   return GoRouter(
     initialLocation: '/',
@@ -28,6 +31,14 @@ GoRouter createRouter({
         name: 'auth-status',
         builder: (context, state) =>
             AuthStatusScreen(authService: authService),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => SettingsScreen(
+          authService: authService,
+          appLockService: appLockService,
+        ),
       ),
       GoRoute(
         path: '/home',
@@ -155,14 +166,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   .toList(),
             ),
           IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Keluar',
-            onPressed: () async {
-              final router = GoRouter.of(context);
-              await widget.authService.logout();
-              if (!context.mounted) return;
-              router.go('/');
-            },
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Pengaturan & Profil',
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),

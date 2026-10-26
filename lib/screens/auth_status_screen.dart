@@ -28,6 +28,7 @@ class AuthStatusScreen extends StatefulWidget {
 class _AuthStatusScreenState extends State<AuthStatusScreen> {
   String? _deviceId;
   DeviceStatusResult? _lastResult;
+  UserProfile? _profile;
   bool _isChecking = false;
   String? _error;
   Timer? _pollTimer;
@@ -37,10 +38,20 @@ class _AuthStatusScreenState extends State<AuthStatusScreen> {
     super.initState();
     _deviceId = widget.initialDeviceId;
     _checkStatus();
+    _fetchProfile();
     _pollTimer = Timer.periodic(
       const Duration(seconds: 10),
       (_) => _checkStatus(),
     );
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final p = await widget.authService.getUserProfile();
+      if (mounted) {
+        setState(() => _profile = p);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -136,6 +147,63 @@ class _AuthStatusScreenState extends State<AuthStatusScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
+                  if (_profile != null) ...[
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: colors.outlineVariant.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: colors.primaryContainer,
+                              child: Text(
+                                _profile!.displayName.isNotEmpty
+                                    ? _profile!.displayName[0].toUpperCase()
+                                    : 'U',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _profile!.displayName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    '@${_profile!.username} • ${_profile!.roleName}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colors.onSurface
+                                          .withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   _StatusHeader(status: status, colors: colors, theme: theme),
                   if (_error != null) ...[
                     const SizedBox(height: 16),
@@ -287,16 +355,6 @@ class _StatusHeader extends StatelessWidget {
 
     return Column(
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: iconBg,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 38, color: iconColor),
-        ),
-        const SizedBox(height: 16),
         Text(
           title,
           textAlign: TextAlign.center,
@@ -484,7 +542,7 @@ class _ApproveInstructionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final devId = deviceId ?? '<DEVICE_ID>';
-    final cmd = 'cd svc-auth && go run ./cmd/auth device approve $devId';
+    final cmd = 'auth device approve $devId';
 
     return Card(
       elevation: 0,
