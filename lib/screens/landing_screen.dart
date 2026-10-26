@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../services/auth_service.dart';
@@ -59,20 +60,16 @@ class _LandingScreenState extends State<LandingScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: colors.primaryContainer,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.cloud_rounded,
-                      size: 44,
-                      color: colors.onPrimaryContainer,
+                  Center(
+                  child: SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: SvgPicture.asset(
+                      'assets/images/in_app_icon.svg',
+                      fit: BoxFit.contain,
                     ),
                   ),
+                ),
                   const SizedBox(height: 28),
                   Text(
                     'Gumpalan',

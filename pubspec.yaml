@@ -34,6 +34,7 @@ dependencies:
   go_router: ^14.8.1
   flutter_dotenv: ^5.2.1
   device_info_plus: ^13.3.0
+  flutter_svg: ^2.3.0
   core_api:
     path: ../app-core-api
   core_ui:
@@ -52,6 +53,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -62,6 +65,8 @@ flutter:
 
   assets:
     - .env
+    - "assets/images/in_app_icon.svg"
+    - "assets/images/splash_icon.png"
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -88,3 +93,16 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+  color: "#0B1410"
+  image: "assets/images/splash_icon.png"
+  android_12:
+    image: "assets/images/splash_icon.png"
+    color: "#0B1410"
+  ios: false
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: false
+  image_path: "assets/icons/app_icon.png"

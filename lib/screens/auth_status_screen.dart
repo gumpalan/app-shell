@@ -4,6 +4,7 @@ import 'package:core_api/core_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../services/auth_service.dart';
 
@@ -116,20 +117,15 @@ class _AuthStatusScreenState extends State<AuthStatusScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: colors.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.cloud_rounded,
-                        size: 34,
-                        color: colors.onPrimaryContainer,
-                      ),
+                  child: SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: SvgPicture.asset(
+                      'assets/images/in_app_icon.svg',
+                      fit: BoxFit.contain,
                     ),
                   ),
+                ),
                   const SizedBox(height: 12),
                   Text(
                     'Gumpalan',
