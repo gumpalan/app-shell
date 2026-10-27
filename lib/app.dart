@@ -15,11 +15,7 @@ class GumpalanApp extends StatefulWidget {
   final AuthService? authService;
   final AppLockService? appLockService;
 
-  const GumpalanApp({
-    super.key,
-    this.authService,
-    this.appLockService,
-  });
+  const GumpalanApp({super.key, this.authService, this.appLockService});
 
   @override
   State<GumpalanApp> createState() => _GumpalanAppState();
@@ -56,7 +52,8 @@ class _GumpalanAppState extends State<GumpalanApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       _appLockService.isLockEnabled().then((enabled) {
         if (enabled && mounted) {
           _appLockService.lockSession();
@@ -116,15 +113,6 @@ class _GumpalanAppState extends State<GumpalanApp> with WidgetsBindingObserver {
         _setStart(_StartRoute.status);
       } else {
         _setStart(_StartRoute.landing);
-      }
-    }
-  }
-
-  Future<void> _checkInitialLock() async {
-    final lockEnabled = await _appLockService.isLockEnabled();
-    if (lockEnabled) {
-      if (mounted) {
-        setState(() => _isAppLocked = true);
       }
     }
   }
@@ -193,24 +181,34 @@ class _SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_rounded, size: 72, color: colors.primary),
-            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.primary.withValues(alpha: isDark ? 0.12 : 0.08),
+                border: Border.all(
+                  color: colors.primary.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Icon(Icons.cloud_rounded, size: 56, color: colors.primary),
+            ),
+            const SizedBox(height: 24),
             Text(
               'Gumpalan',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
+              style: Theme.of(context).textTheme.headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold, letterSpacing: -0.5),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 36),
             SizedBox(
-              width: 28,
-              height: 28,
+              width: 26,
+              height: 26,
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
                 color: colors.primary,

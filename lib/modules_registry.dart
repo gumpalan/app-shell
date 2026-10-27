@@ -6,14 +6,14 @@ import 'package:mod_iot/mod_iot.dart';
 class ModulesRegistry {
   ModulesRegistry._();
 
-  static final List<AppModule> _allModules = [
-    IotModule(),
-  ];
+  static final List<AppModule> _allModules = [IotModule()];
 
   /// Mengembalikan daftar modul aktif yang telah disaring berdasarkan:
   /// 1. Konfigurasi `MODULES` pada berkas `.env` (jika didefinisikan).
   /// 2. Daftar modul yang diizinkan untuk perangkat dari backend auth.
-  static List<AppModule> getActiveModules({List<String>? serverEnabledModules}) {
+  static List<AppModule> getActiveModules({
+    List<String>? serverEnabledModules,
+  }) {
     final envModules = dotenv.env['MODULES'] ?? '';
     List<String>? allowedByEnv;
     if (envModules.isNotEmpty) {

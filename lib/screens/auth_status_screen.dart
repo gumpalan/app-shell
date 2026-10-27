@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:core_api/core_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
 import '../services/auth_service.dart';
 
@@ -128,15 +128,15 @@ class _AuthStatusScreenState extends State<AuthStatusScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(
-                  child: SizedBox(
-                    width: 100,
-                    height: 100,
-                    child: SvgPicture.asset(
-                      'assets/images/in_app_icon.svg',
-                      fit: BoxFit.contain,
+                    child: SizedBox(
+                      width: 100,
+                      height: 100,
+                      child: SvgPicture.asset(
+                        'assets/images/in_app_icon.svg',
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
-                ),
                   const SizedBox(height: 12),
                   Text(
                     'Gumpalan',
@@ -191,8 +191,9 @@ class _AuthStatusScreenState extends State<AuthStatusScreen> {
                                   Text(
                                     '@${_profile!.username} • ${_profile!.roleName}',
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colors.onSurface
-                                          .withValues(alpha: 0.6),
+                                      color: colors.onSurface.withValues(
+                                        alpha: 0.6,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -330,8 +331,7 @@ class _StatusHeader extends StatelessWidget {
         iconColor = colors.primary;
         iconBg = colors.primaryContainer;
         title = 'Menunggu Persetujuan';
-        desc =
-          'Perangkat ini telah terdaftar. Hubungi administrator sistem untuk mengaktifkan akses perangkat.';
+        desc = 'Perangkat ini telah terdaftar. Hubungi administrator sistem untuk mengaktifkan akses perangkat.';
       case DeviceStatus.approved:
         icon = Icons.check_circle_rounded;
         iconColor = Colors.green;
@@ -343,8 +343,7 @@ class _StatusHeader extends StatelessWidget {
         iconColor = colors.error;
         iconBg = colors.errorContainer;
         title = 'Akses Dicabut';
-        desc =
-          'Otorisasi perangkat ini telah dinonaktifkan oleh administrator sistem.';
+        desc = 'Otorisasi perangkat ini telah dinonaktifkan oleh administrator sistem.';
       case DeviceStatus.unknown:
         icon = Icons.help_outline_rounded;
         iconColor = colors.error;
@@ -419,7 +418,11 @@ class _DeviceInfoCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.info_outline_rounded, size: 16, color: colors.primary),
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: colors.primary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Informasi Perangkat',
@@ -549,9 +552,7 @@ class _ApproveInstructionCard extends StatelessWidget {
       color: colors.surfaceContainerHighest.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: colors.outlineVariant.withValues(alpha: 0.3),
-        ),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

@@ -94,13 +94,17 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
           children: [
             const Spacer(),
             Icon(
-              _isConfirming ? Icons.lock_outline_rounded : Icons.shield_outlined,
+              _isConfirming
+                  ? Icons.lock_outline_rounded
+                  : Icons.shield_outlined,
               size: 48,
               color: colors.onSurface.withValues(alpha: 0.8),
             ),
             const SizedBox(height: 16),
             Text(
-              _isConfirming ? 'Masukkan ulang 6 digit PIN' : 'Buat 6 digit PIN keamanan',
+              _isConfirming
+                  ? 'Masukkan ulang 6 digit PIN'
+                  : 'Buat 6 digit PIN keamanan',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -136,10 +140,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
 
             const Spacer(),
 
-            _NumPad(
-              onKeyPress: _onKeyPress,
-              onDelete: _onDelete,
-            ),
+            _NumPad(onKeyPress: _onKeyPress, onDelete: _onDelete),
             const SizedBox(height: 24),
           ],
         ),
@@ -303,7 +304,9 @@ class _PinLockScreenState extends State<PinLockScreen> {
             _NumPad(
               onKeyPress: _onKeyPress,
               onDelete: _onDelete,
-              leftActionIcon: _biometricAvailable ? Icons.fingerprint_rounded : null,
+              leftActionIcon: _biometricAvailable
+                  ? Icons.fingerprint_rounded
+                  : null,
               onLeftAction: _biometricAvailable ? _promptBiometric : null,
             ),
             const SizedBox(height: 24),
@@ -344,14 +347,14 @@ class _PinDotsIndicator extends StatelessWidget {
             color: hasError
                 ? colors.error
                 : isFilled
-                    ? colors.onSurface
-                    : colors.onSurface.withValues(alpha: 0.15),
+                ? colors.primary
+                : colors.onSurface.withValues(alpha: 0.15),
             border: Border.all(
               color: hasError
                   ? colors.error
                   : isFilled
-                      ? colors.onSurface
-                      : colors.outlineVariant.withValues(alpha: 0.5),
+                  ? colors.primary
+                  : colors.outlineVariant.withValues(alpha: 0.6),
               width: 1.5,
             ),
           ),
@@ -442,10 +445,7 @@ class _NumPad extends StatelessWidget {
           child: Center(
             child: Text(
               digit,
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600),
             ),
           ),
         ),

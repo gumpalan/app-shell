@@ -6,13 +6,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// PIN merupakan kunci utama; otentikasi biometrik adalah opsi pelengkap.
 class AppLockService {
   static const String _keyPin = 'gumpalan_app_lock_pin';
-  static const String _keyBiometricEnabled = 'gumpalan_app_lock_biometric_enabled';
+  static const String _keyBiometricEnabled =
+      'gumpalan_app_lock_biometric_enabled';
 
   final LocalAuthentication _localAuth;
   bool _isUnlockedForSession = false;
 
   AppLockService({LocalAuthentication? localAuth})
-      : _localAuth = localAuth ?? LocalAuthentication();
+    : _localAuth = localAuth ?? LocalAuthentication();
 
   bool get isUnlockedForSession => _isUnlockedForSession;
 

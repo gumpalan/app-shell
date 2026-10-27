@@ -10,8 +10,9 @@ void main() {
     dotenv.testLoad(fileInput: 'API_URL=http://127.0.0.1:8080\nMODULES=iot\n');
   });
 
-  testWidgets('GumpalanApp splash → landing screen smoke test',
-      (WidgetTester tester) async {
+  testWidgets('GumpalanApp splash → landing screen smoke test', (
+    WidgetTester tester,
+  ) async {
     final storage = FakeStorage();
     final authService = AuthService(storage: storage);
 

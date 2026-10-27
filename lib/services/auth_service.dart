@@ -26,7 +26,8 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final role = json['role'] as Map<String, dynamic>?;
-    final modules = (role?['allowedModules'] as List<dynamic>?)
+    final modules =
+        (role?['allowedModules'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         [];
@@ -102,23 +103,26 @@ class AuthService {
     DeviceRegistration? registration,
     DeviceNameResolver? deviceNameResolver,
     DeviceFingerprintResolver? deviceFingerprintResolver,
-  })  : tokenStorage = storage ?? SharedPrefsTokenStorage(),
-        apiClient = client ??
-            ApiClient(
-              baseUrl: dotenv.env['API_URL'] ?? 'http://127.0.0.1:8001',
-              tokenStorage: storage ?? SharedPrefsTokenStorage(),
-            ),
-        deviceRegistration = registration ??
-            DeviceRegistration(
-              apiClient: client ??
-                  ApiClient(
-                    baseUrl: dotenv.env['API_URL'] ?? 'http://127.0.0.1:8001',
-                    tokenStorage: storage ?? SharedPrefsTokenStorage(),
-                  ),
-            ),
-        _deviceNameResolver = deviceNameResolver ?? _resolveDeviceName,
-        _deviceFingerprintResolver =
-            deviceFingerprintResolver ?? _resolveDeviceFingerprint;
+  }) : tokenStorage = storage ?? SharedPrefsTokenStorage(),
+       apiClient =
+           client ??
+           ApiClient(
+             baseUrl: dotenv.env['API_URL'] ?? 'http://127.0.0.1:8001',
+             tokenStorage: storage ?? SharedPrefsTokenStorage(),
+           ),
+       deviceRegistration =
+           registration ??
+           DeviceRegistration(
+             apiClient:
+                 client ??
+                 ApiClient(
+                   baseUrl: dotenv.env['API_URL'] ?? 'http://127.0.0.1:8001',
+                   tokenStorage: storage ?? SharedPrefsTokenStorage(),
+                 ),
+           ),
+       _deviceNameResolver = deviceNameResolver ?? _resolveDeviceName,
+       _deviceFingerprintResolver =
+           deviceFingerprintResolver ?? _resolveDeviceFingerprint;
 
   /// Memeriksa apakah token autentikasi tersimpan di media lokal.
   Future<bool> isAuthenticated() async {
@@ -182,7 +186,9 @@ class AuthService {
     } else if (response.statusCode == 409) {
       throw Exception('Username sudah terdaftar.');
     } else {
-      throw Exception('Registrasi gagal dengan kode status: ${response.statusCode}');
+      throw Exception(
+        'Registrasi gagal dengan kode status: ${response.statusCode}',
+      );
     }
   }
 
@@ -259,10 +265,7 @@ class AuthService {
   }) async {
     final response = await apiClient.put(
       '/auth/v1/user/password',
-      body: {
-        'oldPassword': oldPassword,
-        'newPassword': newPassword,
-      },
+      body: {'oldPassword': oldPassword, 'newPassword': newPassword},
     );
     if (response.statusCode == 401) {
       throw Exception('Kata sandi lama salah.');
@@ -280,7 +283,9 @@ class AuthService {
           .map((item) => UserDeviceItem.fromJson(item as Map<String, dynamic>))
           .toList();
     }
-    throw Exception('Gagal mengambil daftar perangkat (${response.statusCode})');
+    throw Exception(
+      'Gagal mengambil daftar perangkat (${response.statusCode})',
+    );
   }
 
   /// Mencabut izin perangkat tertentu yang tertaut pada akun pengguna ini.
