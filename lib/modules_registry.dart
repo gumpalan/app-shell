@@ -6,7 +6,13 @@ import 'package:mod_iot/mod_iot.dart';
 class ModulesRegistry {
   ModulesRegistry._();
 
-  static final List<AppModule> _allModules = [IotModule()];
+  static final List<AppModule> _allModules = [
+    IotModule(
+      service: IotService(
+        baseUrl: dotenv.env['API_URL'] ?? 'http://127.0.0.1:8080',
+      ),
+    ),
+  ];
 
   /// Mengembalikan daftar modul aktif yang telah disaring berdasarkan:
   /// 1. Konfigurasi `MODULES` pada berkas `.env` (jika didefinisikan).

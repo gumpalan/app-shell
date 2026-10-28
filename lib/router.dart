@@ -649,6 +649,47 @@ class _ModuleMenuHubTab extends StatelessWidget {
                     const SizedBox(height: 8),
                     module.homeCard!,
                   ],
+                  if (module.menuEntries.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    const SizedBox(height: 6),
+                    ...module.menuEntries.map((entry) {
+                      return ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colors.primary.withValues(alpha: 0.08),
+                          ),
+                          child: Icon(
+                            entry.icon,
+                            size: 18,
+                            color: colors.primary,
+                          ),
+                        ),
+                        title: Text(
+                          entry.label,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                        ),
+                        onTap: () {
+                          if (entry.onOpen != null) {
+                            entry.onOpen!(context);
+                          } else if (entry.path != null) {
+                            context.push(entry.path!);
+                          }
+                        },
+                      );
+                    }),
+                  ],
                 ],
               ),
             ),
